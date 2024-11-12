@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { 
+      width: 300px; 
+      padding: 15px; 
+      font-family: Arial, sans-serif;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    select, input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 8px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    button#stop {
+      background-color: #db4437;
+    }
+    button#stop:hover {
+      background-color: #c53929;
+    }
+    .delimiter-inputs {
+      display: flex;
+      gap: 10px;
+    }
+    .delimiter-inputs input {
+      width: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="control-group">
+    <label for="voice">Voice:</label>
+    <select id="voice"></select>
+  </div>
+  
+  <div class="control-group">
+    <label for="rate">Speech Rate:</label>
+    <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+    <span id="rateValue">1.0x</span>
+  </div>
+  
+  <!-- <div class="control-group">
+    <label>Delimiters:</label>
+    <div class="delimiter-inputs">
+      <input type="text" id="startDelimiter" value="<" maxlength="1">
+      <input type="text" id="endDelimiter" value=">" maxlength="1">
+    </div>
+  </div> -->
+
+  <button id="speak">Speak Slide</button>
+  <button id="stop">Stop Speaking</button>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
