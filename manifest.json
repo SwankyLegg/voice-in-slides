@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Slides Speech Synthesizer",
-  "version": "0.1",
-  "description": "Synthesizes speech for text between < and > in Google Slides",
+  "name": "Voice in Slides",
+  "version": "1.0",
+  "description": "Add text-to-speech in Google Slides!",
   "permissions": [
     "activeTab",
     "storage"
