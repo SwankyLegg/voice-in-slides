@@ -7,7 +7,7 @@ A Chrome extension that adds text-to-speech functionality to Google Slides, allo
 - 🎯 Works directly in Google Slides
 - 🗣️ Text-to-speech for bracketed content
 - ⚡ Automatic speech when changing slides
-- 🎚️ Adjustable speech rate (0.5x to 2x)
+- ⏱️ Adjustable speech rate (0.5x to 2x)
 - 🎙️ Multiple voice options
 - 💾 Persistent settings
 
