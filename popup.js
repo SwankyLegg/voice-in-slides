@@ -5,6 +5,7 @@ let settings = {
   volume: 1.0,
   startDelimiter: '<',
   endDelimiter: '>',
+  enabled: true,
 };
 
 function saveSettings() {
@@ -14,7 +15,11 @@ function saveSettings() {
 // Load saved settings
 chrome.storage.local.get('speechSettings', (data) => {
   if (data.speechSettings) {
-    settings = { ...settings, ...data.speechSettings };
+    settings = {
+      ...settings,
+      ...data.speechSettings,
+      enabled: data.speechSettings.enabled ?? true
+    };
   }
   initializeControls();
 });
@@ -42,8 +47,11 @@ function initializeControls() {
   rateValue.textContent = settings.rate + 'x';
 
   // Initialize delimiters
-  document.getElementById('startDelimiter').value = settings.startDelimiter;
-  document.getElementById('endDelimiter').value = settings.endDelimiter;
+  // document.getElementById('startDelimiter').value = settings.startDelimiter;
+  // document.getElementById('endDelimiter').value = settings.endDelimiter;
+
+  // Initialize enabled switch
+  document.getElementById('enabled').checked = settings.enabled;
 }
 
 // Event Listeners
@@ -102,3 +110,29 @@ document.getElementById('speech-toggle').addEventListener('click', async () => {
     resetButton();
   }
 });
+
+document.getElementById('enabled').addEventListener('change', saveSettings);
+
+function prevSlide() {
+  // Stop any ongoing speech first
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, { action: "stop" });
+
+    // Then change the slide
+    chrome.tabs.sendMessage(tabs[0].id, { action: "prevSlide" }, function (response) {
+      updateSlideNumber(response.currentSlide);
+    });
+  });
+}
+
+function nextSlide() {
+  // Stop any ongoing speech first
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, { action: "stop" });
+
+    // Then change the slide
+    chrome.tabs.sendMessage(tabs[0].id, { action: "nextSlide" }, function (response) {
+      updateSlideNumber(response.currentSlide);
+    });
+  });
+}

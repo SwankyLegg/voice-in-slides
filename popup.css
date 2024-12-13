@@ -1,0 +1,83 @@
+html, body { 
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  font-family: Roboto, Helvetica,Arial, sans-serif;
+  font-size: 16px;
+  outline: none;
+}
+main {
+  padding: 15px; 
+  width: 300px; 
+}
+.flex-container {
+  align-items: center;
+  display: flex;
+}
+.control-group {
+  margin-bottom: 15px;
+}
+label {
+  display: block;
+  font-weight: bold;
+}
+select, input {
+  width: 100%;
+}
+button {
+  background-color: #4285f4;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  margin: 5px 0;
+  padding: 8px;
+  width: 100%;
+}
+button:hover {
+  background-color: #3367d6;
+}
+button#stop {
+  background-color: #db4437;
+}
+button#stop:hover {
+  background-color: #c53929;
+}
+.delimiter-inputs {
+  display: flex;
+  gap: 10px;
+}
+.delimiter-inputs input {
+  width: 50px;
+}
+.checkbox {
+  height: 16px;
+  margin: 0;
+  width: 16px;
+}
+.switch-label {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+}
+.switch-text {
+  margin-left: 8px;
+  margin-top: 2px;
+}
+.dropdown {
+  cursor: pointer;
+  padding: 4px;
+}
+.dropdown-label {
+  margin-bottom: 4px;
+}
+.slider {
+  margin-inline-end: 8px;
+  padding-block: 8px;
+}
+.slider::-webkit-slider-thumb {
+  cursor: grab;
+}
+.slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+} 
