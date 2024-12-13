@@ -1,18 +1,11 @@
 // Utility function to stop speech synthesis
 function stopSpeech() {
-  return new Promise((resolve) => {
-    if (window.speechSynthesis.speaking) {
-      console.log('Stopping ongoing speech');
-      window.speechSynthesis.cancel();
-      // Small delay to ensure speech is fully stopped
-      setTimeout(() => {
-        resolve();
-      }, 50);
-    } else {
-      console.log('No speech to stop');
-      resolve();
-    }
-  });
+  if (window.speechSynthesis.speaking) {
+    console.log('Stopping ongoing speech');
+    window.speechSynthesis.cancel();
+  } else {
+    console.log('No speech to stop');
+  }
 }
 
 // Initialize available voices
@@ -34,21 +27,18 @@ function fixChromeTimeout() {
   if (speechSynthesis.speaking) {
     speechSynthesis.pause();
     speechSynthesis.resume();
-    setTimeout(fixChromeTimeout, 5000);
+    setTimeout(fixChromeTimeout, 10000);
   }
 }
 
 // Speak a given text using the SpeechSynthesis API
-async function speak(text) {
-  console.log('speak(', text, ')');
+function speak(text) {
   if (!text || text.length === 0) {
     console.log('No text to speak, returning early');
     return;
   }
 
-  // Wait for previous speech to stop completely
-  await stopSpeech();
-
+  stopSpeech();
   chrome.storage.local.get('speechSettings', (data) => {
     const settings = data.speechSettings || {};
     const utterance = new SpeechSynthesisUtterance(text);
@@ -59,27 +49,14 @@ async function speak(text) {
     utterance.volume = settings.volume || 1.0;
 
     // Add event handlers for debugging
-    utterance.onstart = () => console.log('Speech started:', text.substring(0, 50) + (text.length > 49 ? '...' : ''));
+    utterance.onstart = () => console.log('Speech started:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     utterance.onend = () => {
       console.log('Speech ended successfully');
-      if (chrome.runtime?.id) {
-        chrome.runtime.sendMessage({ action: "speechEnd" }).catch(error => {
-          console.log('Error sending speechEnd message:', error);
-        });
-      } else {
-        console.log('No extension context, skipping speechEnd message');
-      }
+      chrome.runtime.sendMessage({ action: "speechEnd" });
     };
     utterance.onerror = (event) => {
       console.error('Speech error:', event.error);
-      // Only send speechEnd if it's not an interrupted error (as that means new speech is starting)
-      if (event.error !== 'interrupted' && chrome.runtime?.id) {
-        chrome.runtime.sendMessage({ action: "speechEnd" }).catch(error => {
-          console.log('Error sending speechEnd message:', error);
-        });
-      } else {
-        console.log('No extension context, skipping interrupted message');
-      }
+      chrome.runtime.sendMessage({ action: "speechEnd" });
     };
 
     // Set the selected voice if available
@@ -124,18 +101,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function getDelimitedText() {
   const DELIMITERS_REGEX = /<([^>]+)>|&lt;([^&]+)&gt;/g;
 
+  // Try multiple methods to find the current slide
   const hash = window.location.hash;
   const slideId = hash.match(/slide=id.([^&]+)/)?.[1];
 
-  if (!slideId) {
-    console.log('No slide ID found in URL');
-    return;
+  let currentSlide;
+
+  if (slideId) {
+    // Try finding the slide by editor ID first
+    currentSlide = document.querySelector(`g[id="editor-${slideId}"]`);
+
+    // If not found, try finding it by slide ID
+    if (!currentSlide) {
+      currentSlide = document.querySelector(`g[id="${slideId}"]`);
+    }
   }
 
-  const currentSlide = document.querySelector(`g[id="editor-${slideId}"]`);
+  // Fallback: try to find the currently visible slide
+  if (!currentSlide) {
+    currentSlide = document.querySelector('.punch-viewer-content:not([style*="display: none"]) g[id^="editor-"]') ||
+      document.querySelector('.punch-viewer-content:not([style*="display: none"]) g[id^="slide-"]');
+  }
+
   if (!currentSlide) {
     console.log('Current slide not found');
-    return;
+    return '';
   }
 
   const textElements = currentSlide.querySelectorAll('text, [font-family]');
@@ -163,49 +153,92 @@ function getDelimitedText() {
 // Observe URL changes to trigger speech synthesis
 function observeUrlChange() {
   let oldHref = document.location.href;
-  console.log('observeUrlChange(', oldHref, ')');
+  const body = document.querySelector('body');
+  let lastSlideId = '';
 
-  const checkUrlChange = () => {
-    if (oldHref !== document.location.href) {
-      console.log('checkUrlChange(', oldHref, ')');
-      oldHref = document.location.href;
+  // Function to check for slide changes
+  function checkSlideChange() {
+    const hash = window.location.hash;
+    const currentSlideId = hash.match(/slide=id.([^&]+)/)?.[1] || '';
 
-      if (chrome.runtime && chrome.runtime.id) {
-        stopSpeech();
-
-        chrome.storage.local.get('speechSettings', (data) => {
-          const settings = data.speechSettings || {};
-          if (settings.enabled !== false) {
-            const text = getDelimitedText();
-            if (text) {
-              speak(text);
-            }
-          }
-        });
-      } else {
-        console.log('Extension context invalidated - observer disconnected');
-      }
+    if (currentSlideId && currentSlideId !== lastSlideId) {
+      lastSlideId = currentSlideId;
+      handleNavigationChange();
     }
+  }
+
+  // Watch for hash changes
+  window.addEventListener('hashchange', checkSlideChange);
+
+  // Watch for DOM changes that might indicate slide changes
+  const observer = new MutationObserver((mutations) => {
+    if (oldHref !== document.location.href) {
+      oldHref = document.location.href;
+      checkSlideChange();
+    }
+
+    // Check if any mutation indicates a slide change
+    const slideChanged = mutations.some(mutation => {
+      return Array.from(mutation.addedNodes).some(node => {
+        return node.nodeType === 1 &&
+          (node.matches?.('.punch-viewer-content') ||
+            node.querySelector?.('.punch-viewer-content'));
+      });
+    });
+
+    if (slideChanged) {
+      checkSlideChange();
+    }
+  });
+
+  observer.observe(body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class']
+  });
+
+  // History API interception
+  const pushState = history.pushState;
+  const replaceState = history.replaceState;
+
+  history.pushState = function () {
+    pushState.apply(history, arguments);
+    checkSlideChange();
   };
 
-  // Handle direct URL changes
-  window.addEventListener('hashchange', checkUrlChange);
-  window.addEventListener('popstate', checkUrlChange);
+  history.replaceState = function () {
+    replaceState.apply(history, arguments);
+    checkSlideChange();
+  };
 
-  // Observe dynamic DOM changes
-  const body = document.querySelector('body');
-  const observer = new MutationObserver(() => {
-    console.log('MutationObserver triggered');
-    checkUrlChange();
-  });
-  observer.observe(body, { childList: true, subtree: true });
+  window.addEventListener('popstate', checkSlideChange);
 
-  // Cleanup on page unload
+  // Clean up on page unload
   window.addEventListener('unload', () => {
     observer.disconnect();
-    window.removeEventListener('hashchange', checkUrlChange);
-    window.removeEventListener('popstate', checkUrlChange);
+    window.removeEventListener('hashchange', checkSlideChange);
   });
+
+  // Initial check
+  checkSlideChange();
+}
+
+// Handle navigation changes
+function handleNavigationChange() {
+  if (chrome.runtime && chrome.runtime.id) {
+    stopSpeech();
+
+    chrome.storage.local.get('speechSettings', (data) => {
+      const settings = data.speechSettings || {};
+      if (settings.enabled !== false) {
+        const text = getDelimitedText();
+        if (text) {
+          speak(text);
+        }
+      }
+    });
+  }
 }
 
 // Initialize the observer on page load if extension context is valid

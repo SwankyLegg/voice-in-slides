@@ -112,27 +112,3 @@ document.getElementById('speech-toggle').addEventListener('click', async () => {
 });
 
 document.getElementById('enabled').addEventListener('change', saveSettings);
-
-function prevSlide() {
-  // Stop any ongoing speech first
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "stop" });
-
-    // Then change the slide
-    chrome.tabs.sendMessage(tabs[0].id, { action: "prevSlide" }, function (response) {
-      updateSlideNumber(response.currentSlide);
-    });
-  });
-}
-
-function nextSlide() {
-  // Stop any ongoing speech first
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "stop" });
-
-    // Then change the slide
-    chrome.tabs.sendMessage(tabs[0].id, { action: "nextSlide" }, function (response) {
-      updateSlideNumber(response.currentSlide);
-    });
-  });
-}
