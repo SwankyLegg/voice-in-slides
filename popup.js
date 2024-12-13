@@ -58,12 +58,47 @@ document.getElementById('rate').addEventListener('input', (e) => {
   saveSettings();
 });
 
-document.getElementById('startDelimiter').addEventListener('change', (e) => {
-  settings.startDelimiter = e.target.value || '<';
-  saveSettings();
+// document.getElementById('startDelimiter').addEventListener('change', (e) => {
+//   settings.startDelimiter = e.target.value || '<';
+//   saveSettings();
+// });
+
+// document.getElementById('endDelimiter').addEventListener('change', (e) => {
+//   settings.endDelimiter = e.target.value || '>';
+//   saveSettings();
+// });
+
+let isPlaying = false;
+
+function resetButton() {
+  const button = document.getElementById('speech-toggle');
+  button.textContent = "Speak";
+  button.style.backgroundColor = "#4285f4";
+  isPlaying = false;
+}
+
+// Add message listener to handle speech end
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === "speechEnd") {
+    resetButton();
+  }
 });
 
-document.getElementById('endDelimiter').addEventListener('change', (e) => {
-  settings.endDelimiter = e.target.value || '>';
-  saveSettings();
+document.getElementById('speech-toggle').addEventListener('click', async () => {
+  const button = document.getElementById('speech-toggle');
+
+  // Get the current active tab
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (!isPlaying) {
+    // Start speaking
+    chrome.tabs.sendMessage(tab.id, { action: "speak" });
+    button.textContent = "Stop";
+    button.style.backgroundColor = "#db4437";
+    isPlaying = true;
+  } else {
+    // Stop speaking
+    chrome.tabs.sendMessage(tab.id, { action: "stop" });
+    resetButton();
+  }
 });

@@ -1,14 +1,38 @@
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "speak") {
+    const text = getAllText();
+    if (text) {
+      speak(text);
+    }
+  } else if (request.action === "stop") {
+    stop();
+  }
+});
+
 function speak(text) {
   stop();
   chrome.storage.local.get('speechSettings', (data) => {
-    var settings;
-    if (data.speechSettings) {
-      settings = { ...settings, ...data.speechSettings };
-    }
+    const settings = data.speechSettings || {};
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = settings?.rate || 1.0;
-    utterance.pitch = settings?.pitch || 1.0;
-    utterance.volume = settings?.volume || 1.0;
+
+    // Apply settings
+    utterance.rate = settings.rate || 1.0;
+    utterance.pitch = settings.pitch || 1.0;
+    utterance.volume = settings.volume || 1.0;
+
+    // Set the selected voice if available
+    if (settings.voiceURI) {
+      const voices = speechSynthesis.getVoices();
+      const selectedVoice = voices.find(voice => voice.voiceURI === settings.voiceURI);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
+
+    utterance.onend = () => {
+      chrome.runtime.sendMessage({ action: "speechEnd" });
+    };
+
     window.speechSynthesis.speak(utterance);
   });
 };
