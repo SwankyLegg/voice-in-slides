@@ -55,7 +55,11 @@ function speak(text) {
       chrome.runtime.sendMessage({ action: "speechEnd" });
     };
     utterance.onerror = (event) => {
-      console.error('Speech error:', event.error);
+      if (event.error === 'interrupted') {
+        console.log('Speech interrupted');
+      } else {
+        console.error('Speech error:', event.error);
+      }
       chrome.runtime.sendMessage({ action: "speechEnd" });
     };
 
