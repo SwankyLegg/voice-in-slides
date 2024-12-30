@@ -1,6 +1,6 @@
 # Voice in Slides
 
-A Chrome extension that adds text-to-speech functionality to Google Slides, allowing you to mark and read specific text using angle brackets.
+A Chrome extension that adds text-to-speech functionality to Google Slides, allowing you to mark and read specific text using angle brackets. You can download and test the extension [here](https://chromewebstore.google.com/detail/voice-in-slides/lflalongggdgmpjbjiendclogcjndhli). You can test it in [this presentation](https://docs.google.com/presentation/d/1Rl8sQOex5-9iF_IRJZgbnY21gX_L27f9AGE0XLxlJYA/edit#slide=id.g3200509ea99_0_0).
 
 ## Features
 
