@@ -60,4 +60,4 @@ Feel free to submit issues and pull requests to help improve the extension.
 
 ## License
 
-Available under MIT License.
+Available under [MIT License](LICENSE.txt).
