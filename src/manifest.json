@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Voice in Slides",
-  "version": "1.2",
+  "version": "1.2.1",
   "description": "Add text-to-speech in Google Slides!",
   "permissions": [
     "activeTab",
@@ -19,10 +19,16 @@
       "128": "icons/icon128.png"
     }
   },
-  "content_scripts": [{
-    "matches": ["https://docs.google.com/*"],
-    "js": ["content.js"]
-  }],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
